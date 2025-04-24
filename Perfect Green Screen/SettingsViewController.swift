@@ -69,6 +69,9 @@ class SettingsViewController: UIViewController {
             isHistogramVisible = true
         }
         UserDefaults.standard.set(isHistogramVisible, forKey: DEFAULT_HISTOGRAM_VISIBLE_STRING)
+        
+        // Post notification so current view controller can update immediately
+        NotificationCenter.default.post(name: NSNotification.Name("HistogramVisibilityChanged"), object: nil)
     }
     
     func setHistogramSwitch() {
@@ -103,6 +106,9 @@ class SettingsViewController: UIViewController {
         self.maxBandsLabel.text = "\(currentNumberOfBands)"
         print(currentNumberOfBands)
         UserDefaults.standard.set(currentNumberOfBands, forKey: CURRENT_NUMBER_OF_MAX_BANDS_STRING)
+        
+        // Post notification so main screen can update its max bands value
+        NotificationCenter.default.post(name: NSNotification.Name("MaxBandsValueChanged"), object: nil)
     }
     
 }

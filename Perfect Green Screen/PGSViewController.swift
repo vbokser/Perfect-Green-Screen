@@ -122,6 +122,18 @@ class PGSViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferD
         let tap = UITapGestureRecognizer(target: self, action: #selector(finishedEditing(_:)))
         tap.cancelsTouchesInView = false
         self.view.addGestureRecognizer(tap)
+        
+        // Add observer for histogram visibility changes
+        NotificationCenter.default.addObserver(self, 
+                                             selector: #selector(histogramVisibilityChanged), 
+                                             name: NSNotification.Name("HistogramVisibilityChanged"), 
+                                             object: nil)
+                                             
+        // Add observer for max bands value changes
+        NotificationCenter.default.addObserver(self, 
+                                             selector: #selector(maxBandsValueChanged), 
+                                             name: NSNotification.Name("MaxBandsValueChanged"), 
+                                             object: nil)
     }
     
     override func viewDidAppear(_ animated: Bool) {
@@ -364,15 +376,20 @@ class PGSViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferD
     }
     
     @IBAction func bandsSliderChanged(_ sender: UISlider) {
-        let currentNumberOfBands = Int(bandsSlider.value)
+        // Get the current max bands value and ensure we respect it
+        let maxBandsValue = UserDefaults.standard.integer(forKey: CURRENT_NUMBER_OF_MAX_BANDS_STRING)
+        
+        // Ensure slider max value is updated
+        bandsSlider.maximumValue = Float(maxBandsValue)
+        
+        // Get selected value (clamped to max)
+        let currentNumberOfBands = min(Int(bandsSlider.value), maxBandsValue)
         self.numberOfBands = checkBandsRange(numBands: currentNumberOfBands)
         bandsTextField.text = "\(self.numberOfBands)"
         print("number of bands = \(self.numberOfBands)")
         
-        //update user defaults
+        // Update user defaults
         UserDefaults.standard.set(self.numberOfBands, forKey: CURRENT_NUMBER_OF_BANDS_STRING)
-
-        //setupBandSize()
     }
     
 //    func setupBandSize() {
@@ -449,6 +466,18 @@ class PGSViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferD
         cameraDevice?.unlockForConfiguration()
 
         //captureSession.commitConfiguration()
+    }
+    
+    @objc func histogramVisibilityChanged() {
+        setVisibleHistogram()
+    }
+    
+    @objc func maxBandsValueChanged() {
+        setupSliderForBands()
+    }
+    
+    deinit {
+        NotificationCenter.default.removeObserver(self)
     }
 }
 
