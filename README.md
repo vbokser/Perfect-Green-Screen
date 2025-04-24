@@ -1,10 +1,11 @@
-README
+# README
 
-Intro: Perfect Green Screen takes an image in of your lit green screen and 
+# Intro**: 
+Perfect Green Screen takes an image in of your lit green screen and 
 gives you a band view of the green screen showing all the gradation in the image (based on how graduated you want to see 
 the image)
 
-Why is this important?
+# Why is this important?
 
 Well, its sort of like a zebra setting for every block of image range in your image.
 Or a False color even (even though its all grey)
@@ -18,7 +19,7 @@ So if you see too many bands in your green screen, you know you need to have bet
 
 Its a small but useful tool. One of many you should use.
 
-How does it work:
+# How does it work:
 
 Two images are displayed
 Left Image: Original Color Image
