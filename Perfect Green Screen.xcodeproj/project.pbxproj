@@ -21,6 +21,8 @@
 		384725BD2251CC8300125B03 /* SettingsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 384725BC2251CC8300125B03 /* SettingsViewController.swift */; };
 		3892C264225407E50070426C /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3892C263225407E50070426C /* Constants.swift */; };
 		CA90A51A4E84485611486768 /* Pods_Perfect_Green_Screen.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1004E9FE6701A8189ABA1867 /* Pods_Perfect_Green_Screen.framework */; };
+		D8EAA9F52DB9ED3B00CDCE5A /* CameraManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8EAA9F32DB9ED3B00CDCE5A /* CameraManager.swift */; };
+		D8EAA9F62DB9ED3B00CDCE5A /* ImageProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8EAA9F42DB9ED3B00CDCE5A /* ImageProcessor.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -42,6 +44,8 @@
 		3892C263225407E50070426C /* Constants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Constants.swift; sourceTree = "<group>"; };
 		44A5B97CC0C45676E154C420 /* Pods-Perfect Green Screen.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Perfect Green Screen.debug.xcconfig"; path = "Target Support Files/Pods-Perfect Green Screen/Pods-Perfect Green Screen.debug.xcconfig"; sourceTree = "<group>"; };
 		5A795205201F1A4FFF225EF4 /* Pods-Perfect Green Screen.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Perfect Green Screen.release.xcconfig"; path = "Target Support Files/Pods-Perfect Green Screen/Pods-Perfect Green Screen.release.xcconfig"; sourceTree = "<group>"; };
+		D8EAA9F32DB9ED3B00CDCE5A /* CameraManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraManager.swift; sourceTree = "<group>"; };
+		D8EAA9F42DB9ED3B00CDCE5A /* ImageProcessor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageProcessor.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -81,11 +85,10 @@
 		38340DDC224FE428009A0E56 /* Perfect Green Screen */ = {
 			isa = PBXGroup;
 			children = (
-				38340DDD224FE428009A0E56 /* AppDelegate.swift */,
-				38340DDF224FE428009A0E56 /* PGSViewController.swift */,
-				38340DEF224FE8D9009A0E56 /* InfoViewController.swift */,
-				384725BC2251CC8300125B03 /* SettingsViewController.swift */,
-				3892C263225407E50070426C /* Constants.swift */,
+				D8EAA9F22DB9ED2000CDCE5A /* Aux */,
+				D8EAA9F02DB9ED0500CDCE5A /* App */,
+				D8EAA9EF2DB9ECF600CDCE5A /* Camera Processing */,
+				D8EAA9F12DB9ED0E00CDCE5A /* Views */,
 				38340DE1224FE428009A0E56 /* Main.storyboard */,
 				38340DE4224FE42A009A0E56 /* Assets.xcassets */,
 				38340DE6224FE42A009A0E56 /* LaunchScreen.storyboard */,
@@ -114,6 +117,41 @@
 				5A795205201F1A4FFF225EF4 /* Pods-Perfect Green Screen.release.xcconfig */,
 			);
 			path = Pods;
+			sourceTree = "<group>";
+		};
+		D8EAA9EF2DB9ECF600CDCE5A /* Camera Processing */ = {
+			isa = PBXGroup;
+			children = (
+				D8EAA9F32DB9ED3B00CDCE5A /* CameraManager.swift */,
+				D8EAA9F42DB9ED3B00CDCE5A /* ImageProcessor.swift */,
+			);
+			path = "Camera Processing";
+			sourceTree = "<group>";
+		};
+		D8EAA9F02DB9ED0500CDCE5A /* App */ = {
+			isa = PBXGroup;
+			children = (
+				38340DDD224FE428009A0E56 /* AppDelegate.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		D8EAA9F12DB9ED0E00CDCE5A /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				38340DEF224FE8D9009A0E56 /* InfoViewController.swift */,
+				38340DDF224FE428009A0E56 /* PGSViewController.swift */,
+				384725BC2251CC8300125B03 /* SettingsViewController.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		D8EAA9F22DB9ED2000CDCE5A /* Aux */ = {
+			isa = PBXGroup;
+			children = (
+				3892C263225407E50070426C /* Constants.swift */,
+			);
+			path = Aux;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -202,9 +240,13 @@
 			inputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-Perfect Green Screen/Pods-Perfect Green Screen-frameworks-${CONFIGURATION}-input-files.xcfilelist",
 			);
+			inputPaths = (
+			);
 			name = "[CP] Embed Pods Frameworks";
 			outputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-Perfect Green Screen/Pods-Perfect Green Screen-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -244,6 +286,8 @@
 				38340DE0224FE428009A0E56 /* PGSViewController.swift in Sources */,
 				38340DDE224FE428009A0E56 /* AppDelegate.swift in Sources */,
 				38340DF0224FE8DA009A0E56 /* InfoViewController.swift in Sources */,
+				D8EAA9F52DB9ED3B00CDCE5A /* CameraManager.swift in Sources */,
+				D8EAA9F62DB9ED3B00CDCE5A /* ImageProcessor.swift in Sources */,
 				384725BD2251CC8300125B03 /* SettingsViewController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
