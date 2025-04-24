@@ -1,6 +1,6 @@
 # README
 
-# Intro**: 
+# Intro: 
 Perfect Green Screen takes an image in of your lit green screen and 
 gives you a band view of the green screen showing all the gradation in the image (based on how graduated you want to see 
 the image)
