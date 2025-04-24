@@ -62,15 +62,12 @@ class PGSViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferD
         x_values = Array<Int>(repeating: 0, count: numberValueslsInByte)
         
         self.barChartValues = (0..<256).map { (i) -> BarChartDataEntry in
-            //let val = Double(arc4random_uniform(UInt32(500)))
             return BarChartDataEntry(x: Double(i), y: Double(histogramData[i]))
         }
         self.chartDataSet = BarChartDataSet(entries: self.barChartValues, label: "Histogram")
-        if let dataSet = self.chartDataSet {
-            dataSet.drawValuesEnabled = false
-            dataSet.colors = [NSUIColor.white]
-            self.chartData = BarChartData(dataSet: dataSet)
-        }
+        self.chartDataSet?.drawValuesEnabled = false
+        self.chartDataSet?.colors = [NSUIColor.white]
+        self.chartData = BarChartData(dataSet: self.chartDataSet!)
         
         guard barChartView != nil else {
             print("Error: barChartView is nil - check storyboard module settings")
@@ -91,6 +88,7 @@ class PGSViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferD
         self.barChartView.borderColor = .white
         
         self.barChartView.gridBackgroundColor = .clear
+        self.barChartView.backgroundColor = .clear
         self.barChartView.leftAxis.gridColor = .clear
         self.barChartView.rightAxis.gridColor = .clear
 
@@ -214,12 +212,7 @@ class PGSViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferD
             self.barChartValues[counter].y = (Double(newHistogramData[counter])/self.total_pixel_count) * 100.0
         }
 
-        guard let newDataSet = BarChartDataSet(entries: self.barChartValues, label: "Histogram") else {
-            print("Error creating BarChartDataSet")
-            self.doUpdateCharts = false
-            return
-        }
-        
+        let newDataSet = BarChartDataSet(entries: self.barChartValues, label: "Histogram")
         newDataSet.drawValuesEnabled = false
         newDataSet.colors = [NSUIColor.white]
         
