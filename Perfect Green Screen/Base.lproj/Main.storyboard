@@ -194,7 +194,7 @@
         <!--Settings View Controller-->
         <scene sceneID="Hc4-9Z-M7y">
             <objects>
-                <viewController id="fcJ-Yo-5HL" customClass="SettingsViewController" customModule="Perfect_Green_Screen" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController id="fcJ-Yo-5HL" customClass="SettingsViewController" customModule="Perfect_Green_Screen" sceneMemberID="viewController">
                     <layoutGuides>
                         <viewControllerLayoutGuide type="top" id="4w8-hV-6LM"/>
                         <viewControllerLayoutGuide type="bottom" id="zR6-VG-dLz"/>
@@ -328,7 +328,7 @@
         <!--Info View Controller-->
         <scene sceneID="leb-Kc-I5n">
             <objects>
-                <viewController id="hu1-3U-9Pf" customClass="InfoViewController" customModule="Perfect_Green_Screen" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController id="hu1-3U-9Pf" customClass="InfoViewController" customModule="Perfect_Green_Screen" sceneMemberID="viewController">
                     <layoutGuides>
                         <viewControllerLayoutGuide type="top" id="vLb-Lx-JHs"/>
                         <viewControllerLayoutGuide type="bottom" id="EDU-nd-O9f"/>

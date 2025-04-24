@@ -1,0 +1,19 @@
+To fix the warning about the Run Script build phase:
+
+1. Open your Xcode project
+2. Select your target
+3. Go to the "Build Phases" tab
+4. Find the problematic "Run Script" phase
+5. There are two ways to fix it:
+
+Option 1: Specify outputs
+- Click on the "Run Script" phase to expand it
+- In the "Output Files" section, add appropriate output paths
+- For example, if the script generates a file, add the path to that file
+
+Option 2: Disable dependency analysis
+- Uncheck the "Based on dependency analysis" checkbox at the bottom of the script phase
+
+The warning appears because Xcode doesn't know when to run the script since no outputs are specified. By either specifying outputs or disabling dependency analysis, you tell Xcode when to run the script.
+
+For the specific script you're seeing, option 2 (disabling dependency analysis) is likely the simplest solution, especially if the script doesn't have well-defined outputs. 

@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		38149AAD225003E2007BF79D /* Charts.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 38149AAC225003E2007BF79D /* Charts.framework */; };
 		38340DDE224FE428009A0E56 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38340DDD224FE428009A0E56 /* AppDelegate.swift */; };
 		38340DE0224FE428009A0E56 /* PGSViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38340DDF224FE428009A0E56 /* PGSViewController.swift */; };
 		38340DE3224FE428009A0E56 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 38340DE1224FE428009A0E56 /* Main.storyboard */; };
@@ -19,15 +18,29 @@
 		38340DF9224FF4EB009A0E56 /* StoreKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 38340DF8224FF4EB009A0E56 /* StoreKit.framework */; };
 		38340DFB224FF4EE009A0E56 /* GameKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 38340DFA224FF4EE009A0E56 /* GameKit.framework */; };
 		384725BD2251CC8300125B03 /* SettingsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 384725BC2251CC8300125B03 /* SettingsViewController.swift */; };
-		3892C264225407E50070426C /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3892C263225407E50070426C /* Constants.swift */; };
-		CA90A51A4E84485611486768 /* Pods_Perfect_Green_Screen.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1004E9FE6701A8189ABA1867 /* Pods_Perfect_Green_Screen.framework */; };
+		D8E8993F2DB9F8B200B878B4 /* DGCharts.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = D8E8993B2DB9F89900B878B4 /* DGCharts.xcframework */; };
+		D8E899402DB9F8B200B878B4 /* DGCharts.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = D8E8993B2DB9F89900B878B4 /* DGCharts.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		D8EAA9F52DB9ED3B00CDCE5A /* CameraManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8EAA9F32DB9ED3B00CDCE5A /* CameraManager.swift */; };
 		D8EAA9F62DB9ED3B00CDCE5A /* ImageProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8EAA9F42DB9ED3B00CDCE5A /* ImageProcessor.swift */; };
+		D8EAA9F82DB9EF7C00CDCE5A /* SettingsManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8EAA9F72DB9EF7C00CDCE5A /* SettingsManager.swift */; };
+		D8EAA9FA2DB9EF8500CDCE5A /* ChartManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8EAA9F92DB9EF8500CDCE5A /* ChartManager.swift */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXCopyFilesBuildPhase section */
+		D8E899412DB9F8B200B878B4 /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				D8E899402DB9F8B200B878B4 /* DGCharts.xcframework in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
-		1004E9FE6701A8189ABA1867 /* Pods_Perfect_Green_Screen.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Perfect_Green_Screen.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		38149AAC225003E2007BF79D /* Charts.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = Charts.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		38340DDA224FE428009A0E56 /* Perfect Green Screen.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Perfect Green Screen.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		38340DDD224FE428009A0E56 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		38340DDF224FE428009A0E56 /* PGSViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PGSViewController.swift; sourceTree = "<group>"; };
@@ -41,11 +54,14 @@
 		38340DF8224FF4EB009A0E56 /* StoreKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = StoreKit.framework; path = System/Library/Frameworks/StoreKit.framework; sourceTree = SDKROOT; };
 		38340DFA224FF4EE009A0E56 /* GameKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GameKit.framework; path = System/Library/Frameworks/GameKit.framework; sourceTree = SDKROOT; };
 		384725BC2251CC8300125B03 /* SettingsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsViewController.swift; sourceTree = "<group>"; };
-		3892C263225407E50070426C /* Constants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Constants.swift; sourceTree = "<group>"; };
-		44A5B97CC0C45676E154C420 /* Pods-Perfect Green Screen.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Perfect Green Screen.debug.xcconfig"; path = "Target Support Files/Pods-Perfect Green Screen/Pods-Perfect Green Screen.debug.xcconfig"; sourceTree = "<group>"; };
-		5A795205201F1A4FFF225EF4 /* Pods-Perfect Green Screen.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Perfect Green Screen.release.xcconfig"; path = "Target Support Files/Pods-Perfect Green Screen/Pods-Perfect Green Screen.release.xcconfig"; sourceTree = "<group>"; };
+		D8C80AAD2DB9F3660095C4D3 /* DGCharts.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = DGCharts.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		D8E899392DB9F87A00B878B4 /* Charts.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Charts.framework; path = System/Library/Frameworks/Charts.framework; sourceTree = SDKROOT; };
+		D8E8993B2DB9F89900B878B4 /* DGCharts.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = DGCharts.xcframework; path = Carthage/Build/DGCharts.xcframework; sourceTree = "<group>"; };
 		D8EAA9F32DB9ED3B00CDCE5A /* CameraManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraManager.swift; sourceTree = "<group>"; };
 		D8EAA9F42DB9ED3B00CDCE5A /* ImageProcessor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageProcessor.swift; sourceTree = "<group>"; };
+		D8EAA9F72DB9EF7C00CDCE5A /* SettingsManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsManager.swift; sourceTree = "<group>"; };
+		D8EAA9F92DB9EF8500CDCE5A /* ChartManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChartManager.swift; sourceTree = "<group>"; };
+		D8EAA9FB2DB9EFEF00CDCE5A /* Perfect Green Screen.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "Perfect Green Screen.entitlements"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -53,11 +69,10 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				38149AAD225003E2007BF79D /* Charts.framework in Frameworks */,
 				38340DFB224FF4EE009A0E56 /* GameKit.framework in Frameworks */,
 				38340DF5224FEAD5009A0E56 /* WebKit.framework in Frameworks */,
 				38340DF9224FF4EB009A0E56 /* StoreKit.framework in Frameworks */,
-				CA90A51A4E84485611486768 /* Pods_Perfect_Green_Screen.framework in Frameworks */,
+				D8E8993F2DB9F8B200B878B4 /* DGCharts.xcframework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -70,7 +85,6 @@
 				38340DDC224FE428009A0E56 /* Perfect Green Screen */,
 				38340DDB224FE428009A0E56 /* Products */,
 				38340DF3224FEAD4009A0E56 /* Frameworks */,
-				9CA81D731C4F674CE4D0065D /* Pods */,
 			);
 			sourceTree = "<group>";
 		};
@@ -85,9 +99,9 @@
 		38340DDC224FE428009A0E56 /* Perfect Green Screen */ = {
 			isa = PBXGroup;
 			children = (
-				D8EAA9F22DB9ED2000CDCE5A /* Aux */,
+				D8EAA9FB2DB9EFEF00CDCE5A /* Perfect Green Screen.entitlements */,
 				D8EAA9F02DB9ED0500CDCE5A /* App */,
-				D8EAA9EF2DB9ECF600CDCE5A /* Camera Processing */,
+				D8EAA9EF2DB9ECF600CDCE5A /* Modules */,
 				D8EAA9F12DB9ED0E00CDCE5A /* Views */,
 				38340DE1224FE428009A0E56 /* Main.storyboard */,
 				38340DE4224FE42A009A0E56 /* Assets.xcassets */,
@@ -101,31 +115,25 @@
 		38340DF3224FEAD4009A0E56 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				38149AAC225003E2007BF79D /* Charts.framework */,
+				D8E8993B2DB9F89900B878B4 /* DGCharts.xcframework */,
+				D8E899392DB9F87A00B878B4 /* Charts.framework */,
+				D8C80AAD2DB9F3660095C4D3 /* DGCharts.framework */,
 				38340DFA224FF4EE009A0E56 /* GameKit.framework */,
 				38340DF8224FF4EB009A0E56 /* StoreKit.framework */,
 				38340DF4224FEAD5009A0E56 /* WebKit.framework */,
-				1004E9FE6701A8189ABA1867 /* Pods_Perfect_Green_Screen.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
-		9CA81D731C4F674CE4D0065D /* Pods */ = {
+		D8EAA9EF2DB9ECF600CDCE5A /* Modules */ = {
 			isa = PBXGroup;
 			children = (
-				44A5B97CC0C45676E154C420 /* Pods-Perfect Green Screen.debug.xcconfig */,
-				5A795205201F1A4FFF225EF4 /* Pods-Perfect Green Screen.release.xcconfig */,
-			);
-			path = Pods;
-			sourceTree = "<group>";
-		};
-		D8EAA9EF2DB9ECF600CDCE5A /* Camera Processing */ = {
-			isa = PBXGroup;
-			children = (
+				D8EAA9F92DB9EF8500CDCE5A /* ChartManager.swift */,
 				D8EAA9F32DB9ED3B00CDCE5A /* CameraManager.swift */,
 				D8EAA9F42DB9ED3B00CDCE5A /* ImageProcessor.swift */,
+				D8EAA9F72DB9EF7C00CDCE5A /* SettingsManager.swift */,
 			);
-			path = "Camera Processing";
+			path = Modules;
 			sourceTree = "<group>";
 		};
 		D8EAA9F02DB9ED0500CDCE5A /* App */ = {
@@ -146,14 +154,6 @@
 			path = Views;
 			sourceTree = "<group>";
 		};
-		D8EAA9F22DB9ED2000CDCE5A /* Aux */ = {
-			isa = PBXGroup;
-			children = (
-				3892C263225407E50070426C /* Constants.swift */,
-			);
-			path = Aux;
-			sourceTree = "<group>";
-		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -161,11 +161,11 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 38340DEC224FE42A009A0E56 /* Build configuration list for PBXNativeTarget "Perfect Green Screen" */;
 			buildPhases = (
-				AF0D4E610E8ABF4E75AF5EDB /* [CP] Check Pods Manifest.lock */,
 				38340DD6224FE428009A0E56 /* Sources */,
 				38340DD7224FE428009A0E56 /* Frameworks */,
 				38340DD8224FE428009A0E56 /* Resources */,
-				41BE896B80B904A64CED7F4C /* [CP] Embed Pods Frameworks */,
+				D89C567A2DB9F4530001AA00 /* ShellScript */,
+				D8E899412DB9F8B200B878B4 /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
@@ -182,8 +182,9 @@
 		38340DD2224FE428009A0E56 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
+				BuildIndependentTargetsInParallel = YES;
 				LastSwiftUpdateCheck = 1020;
-				LastUpgradeCheck = 1020;
+				LastUpgradeCheck = 1630;
 				ORGANIZATIONNAME = "Vitaly Bokser";
 				TargetAttributes = {
 					38340DD9224FE428009A0E56 = {
@@ -232,28 +233,7 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
-		41BE896B80B904A64CED7F4C /* [CP] Embed Pods Frameworks */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-Perfect Green Screen/Pods-Perfect Green Screen-frameworks-${CONFIGURATION}-input-files.xcfilelist",
-			);
-			inputPaths = (
-			);
-			name = "[CP] Embed Pods Frameworks";
-			outputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-Perfect Green Screen/Pods-Perfect Green Screen-frameworks-${CONFIGURATION}-output-files.xcfilelist",
-			);
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-Perfect Green Screen/Pods-Perfect Green Screen-frameworks.sh\"\n";
-			showEnvVarsInLog = 0;
-		};
-		AF0D4E610E8ABF4E75AF5EDB /* [CP] Check Pods Manifest.lock */ = {
+		D89C567A2DB9F4530001AA00 /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -261,19 +241,14 @@
 			inputFileListPaths = (
 			);
 			inputPaths = (
-				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
-				"${PODS_ROOT}/Manifest.lock",
 			);
-			name = "[CP] Check Pods Manifest.lock";
 			outputFileListPaths = (
 			);
 			outputPaths = (
-				"$(DERIVED_FILE_DIR)/Pods-Perfect Green Screen-checkManifestLockResult.txt",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
-			showEnvVarsInLog = 0;
+			shellScript = "# Type a script or drag a script file from your workspace to insert its path.\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -282,10 +257,11 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				3892C264225407E50070426C /* Constants.swift in Sources */,
 				38340DE0224FE428009A0E56 /* PGSViewController.swift in Sources */,
+				D8EAA9FA2DB9EF8500CDCE5A /* ChartManager.swift in Sources */,
 				38340DDE224FE428009A0E56 /* AppDelegate.swift in Sources */,
 				38340DF0224FE8DA009A0E56 /* InfoViewController.swift in Sources */,
+				D8EAA9F82DB9EF7C00CDCE5A /* SettingsManager.swift in Sources */,
 				D8EAA9F52DB9ED3B00CDCE5A /* CameraManager.swift in Sources */,
 				D8EAA9F62DB9ED3B00CDCE5A /* ImageProcessor.swift in Sources */,
 				384725BD2251CC8300125B03 /* SettingsViewController.swift in Sources */,
@@ -340,6 +316,7 @@
 				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
 				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
 				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
 				CLANG_WARN_STRICT_PROTOTYPES = YES;
 				CLANG_WARN_SUSPICIOUS_MOVE = YES;
@@ -349,8 +326,10 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = W269739UBV;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
@@ -365,7 +344,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -401,6 +380,7 @@
 				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
 				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
 				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
 				CLANG_WARN_STRICT_PROTOTYPES = YES;
 				CLANG_WARN_SUSPICIOUS_MOVE = YES;
@@ -410,8 +390,10 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = W269739UBV;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
@@ -420,7 +402,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = iphoneos;
@@ -432,9 +414,10 @@
 		};
 		38340DED224FE42A009A0E56 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 44A5B97CC0C45676E154C420 /* Pods-Perfect Green Screen.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = "Perfect Green Screen/Perfect Green Screen.entitlements";
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 22;
 				DEVELOPMENT_TEAM = W269739UBV;
@@ -456,9 +439,10 @@
 		};
 		38340DEE224FE42A009A0E56 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 5A795205201F1A4FFF225EF4 /* Pods-Perfect Green Screen.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = "Perfect Green Screen/Perfect Green Screen.entitlements";
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 22;
 				DEVELOPMENT_TEAM = W269739UBV;

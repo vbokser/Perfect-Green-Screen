@@ -1,18 +1,10 @@
-//
-//  ViewController.swift
-//  Perfect Green Screen
-//
-//  Created by Vitaly Bokser on 3/30/19.
-//  Copyright © 2019 Vitaly Bokser. All rights reserved.
-//
-
 import UIKit
 import AVFoundation
 import DGCharts
-import Accelerate
 
 class PGSViewController: UIViewController, CameraManagerDelegate {
     
+    // UI Outlets
     @IBOutlet weak var barChartView: BarChartView!
     @IBOutlet weak var bandsSlider: UISlider!
     @IBOutlet weak var bandsTextField: UITextField!
@@ -21,56 +13,38 @@ class PGSViewController: UIViewController, CameraManagerDelegate {
     @IBOutlet weak var exposureLockButton: UIButton!
     @IBOutlet weak var focusLockButton: UIButton!
     
-    // Our new modules
+    // Module managers
     private let cameraManager = CameraManager()
     private let imageProcessor = ImageProcessor()
+    private lazy var chartManager = ChartManager(chartView: barChartView)
+    private let settingsManager = SettingsManager.shared
     
-    // Camera & processing state
-    var numberOfBands: Int = 10 //default value
+    // State
+    private var numberOfBands: Int = 10 // default value
+    private var updateChartTimer: Timer?
+    private var doUpdateCharts: Bool = false
     
-    // Histogram chart data
-    var doUpdateCharts: Bool = false
-    var barChartValues = [BarChartDataEntry]()
-    var chartDataSet: BarChartDataSet?
-    var chartData: BarChartData?
-    
-    // Timers
-    var timer = Timer()
-    var histogramTimer = Timer()
+    // MARK: - View Lifecycle
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        // Initialize with default values
-        self.numberOfBands = 10
-        
-        // Set up histogram chart view
-        setupHistogramChart()
-        
-        // Configure timers
-        scheduledTimerWithTimeInterval()
-
-        // Setup tap gesture for dismissing keyboard
-        let tap = UITapGestureRecognizer(target: self, action: #selector(finishedEditing(_:)))
-        tap.cancelsTouchesInView = false
-        self.view.addGestureRecognizer(tap)
-        
         // Set up camera manager delegate
         cameraManager.delegate = self
         
-        // Add observer for histogram visibility changes
-        NotificationCenter.default.addObserver(self, 
-                                             selector: #selector(histogramVisibilityChanged), 
-                                             name: NSNotification.Name("HistogramVisibilityChanged"), 
-                                             object: nil)
-                                             
-        // Add observer for max bands value changes
-        NotificationCenter.default.addObserver(self, 
-                                             selector: #selector(maxBandsValueChanged), 
-                                             name: NSNotification.Name("MaxBandsValueChanged"), 
-                                             object: nil)
+        // Configure UI elements
+        setupUIElements()
         
-        // Print camera details to console (for development)
+        // Update bands from settings
+        numberOfBands = settingsManager.currentNumberOfBands
+        
+        // Add notification observers
+        setupNotificationObservers()
+        
+        // Start chart update timer
+        setupTimers()
+        
+        // Print camera details for debugging
         cameraManager.printCameraDetails()
     }
     
@@ -87,94 +61,49 @@ class PGSViewController: UIViewController, CameraManagerDelegate {
         cameraView.layer.addSublayer(previewLayer)
         
         // Configure UI based on settings
-        setVisibleHistogram()
-        setupSliderForBands()
+        updateHistogramVisibility()
+        setupBandsSlider()
         
         // Start the camera
         cameraManager.startCamera()
     }
     
-    func setupHistogramChart() {
-        // Initialize empty histogram data for chart
-        self.barChartValues = (0..<256).map { (i) -> BarChartDataEntry in
-            return BarChartDataEntry(x: Double(i), y: 0)
-        }
-        
-        self.chartDataSet = BarChartDataSet(entries: self.barChartValues, label: "Histogram")
-        self.chartDataSet?.drawValuesEnabled = false
-        self.chartDataSet?.colors = [NSUIColor.white]
-        self.chartData = BarChartData(dataSet: self.chartDataSet!)
-        
-        guard barChartView != nil else {
-            print("Error: barChartView is nil - check storyboard module settings")
-            return
-        }
-        
-        // Apply chart data
-        self.barChartView.data = self.chartData
-        
-        // Configure chart appearance
-        self.barChartView.xAxis.labelTextColor = .white
-        self.barChartView.xAxis.drawLabelsEnabled = false
-        self.barChartView.xAxis.labelPosition = .bottom
-        self.barChartView.xAxis.axisMinimum = -5
-        self.barChartView.xAxis.axisMaximum = 260
-
-        self.barChartView.drawGridBackgroundEnabled = false
-        self.barChartView.drawBordersEnabled = true
-        self.barChartView.borderColor = .white
-        
-        self.barChartView.gridBackgroundColor = .clear
-        self.barChartView.backgroundColor = .clear
-        self.barChartView.leftAxis.gridColor = .clear
-        self.barChartView.rightAxis.gridColor = .clear
-
-        self.barChartView.leftAxis.drawLabelsEnabled = false
-        self.barChartView.leftAxis.drawAxisLineEnabled = false
-        self.barChartView.leftAxis.axisLineWidth = 0
-        self.barChartView.leftAxis.labelTextColor = .white
-
-        self.barChartView.rightAxis.drawLabelsEnabled = false
-        self.barChartView.rightAxis.drawAxisLineEnabled = false
-        self.barChartView.rightAxis.axisLineWidth = 0
-        self.barChartView.autoScaleMinMaxEnabled = true
-        self.barChartView.legend.enabled = false
+    // MARK: - UI Setup
+    
+    private func setupUIElements() {
+        // Setup tap gesture for dismissing keyboard
+        let tap = UITapGestureRecognizer(target: self, action: #selector(finishedEditing(_:)))
+        tap.cancelsTouchesInView = false
+        view.addGestureRecognizer(tap)
     }
     
-    func scheduledTimerWithTimeInterval(){
-        timer = Timer.scheduledTimer(timeInterval: 0.75, target: self, selector: #selector(self.updateChart), userInfo: nil, repeats: true)
+    private func setupNotificationObservers() {
+        // Add observer for histogram visibility changes
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(histogramVisibilityChanged),
+            name: NSNotification.Name("HistogramVisibilityChanged"),
+            object: nil
+        )
+        
+        // Add observer for max bands value changes
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(maxBandsValueChanged),
+            name: NSNotification.Name("MaxBandsValueChanged"),
+            object: nil
+        )
     }
     
-    @objc func updateChart() {
-        if self.doUpdateCharts == false {
-            return
-        }
-        
-        // Get histogram data as percentages
-        let percentages = imageProcessor.getHistogramPercentages()
-        
-        // Update chart data entries
-        for counter in 0..<256 {
-            self.barChartValues[counter].x = Double(counter)
-            self.barChartValues[counter].y = percentages[counter]
-        }
-
-        // Create new dataset and update chart
-        let newDataSet = BarChartDataSet(entries: self.barChartValues, label: "Histogram")
-        newDataSet.drawValuesEnabled = false
-        newDataSet.colors = [NSUIColor.white]
-        
-        let newChartData = BarChartData(dataSet: newDataSet)
-        
-        DispatchQueue.main.async { [weak self] in
-            guard let self = self, let barChartView = self.barChartView else { return }
-            
-            barChartView.data = newChartData
-            barChartView.notifyDataSetChanged()
-            self.chartDataSet = newDataSet
-            self.chartData = newChartData
-            self.doUpdateCharts = false
-        }
+    private func setupTimers() {
+        // Create timer for chart updates
+        updateChartTimer = Timer.scheduledTimer(
+            timeInterval: 0.75,
+            target: self,
+            selector: #selector(updateChart),
+            userInfo: nil,
+            repeats: true
+        )
     }
     
     // MARK: - CameraManagerDelegate
@@ -193,136 +122,123 @@ class PGSViewController: UIViewController, CameraManagerDelegate {
         
         // Update histogram data
         _ = imageProcessor.updateHistogram(from: buffer)
-        self.doUpdateCharts = true
+        doUpdateCharts = true
+    }
+    
+    // MARK: - Chart Updates
+    
+    @objc private func updateChart() {
+        if !doUpdateCharts {
+            return
+        }
+        
+        // Get histogram percentages and update chart
+        let percentages = imageProcessor.getHistogramPercentages()
+        chartManager.updateChart(with: percentages)
+        
+        doUpdateCharts = false
+    }
+    
+    // MARK: - Settings Updates
+    
+    @objc private func histogramVisibilityChanged() {
+        updateHistogramVisibility()
+    }
+    
+    @objc private func maxBandsValueChanged() {
+        setupBandsSlider()
+    }
+    
+    private func updateHistogramVisibility() {
+        let isVisible = settingsManager.isHistogramVisible
+        chartManager.setChartVisible(isVisible)
+    }
+    
+    private func setupBandsSlider() {
+        // Get current settings
+        let maxBands = settingsManager.currentMaxBands
+        let currentBands = settingsManager.currentNumberOfBands
+        
+        // Update UI
+        bandsSlider.maximumValue = Float(maxBands)
+        bandsSlider.value = Float(currentBands)
+        bandsTextField.text = "\(currentBands)"
+        
+        // Update the processing value
+        numberOfBands = currentBands
     }
     
     // MARK: - UI Actions
     
     @objc func finishedEditing(_ sender: UITapGestureRecognizer) {
-        self.view.endEditing(true)
+        view.endEditing(true)
     }
     
     @IBAction func viewChangeClicked(_ sender: UISegmentedControl) {
-        if sender.selectedSegmentIndex == 0 {
-            self.cameraView.isHidden = false
-        } else {
-            self.cameraView.isHidden = true
-        }
+        cameraView.isHidden = sender.selectedSegmentIndex != 0
     }
     
     @IBAction func bandsSliderChanged(_ sender: UISlider) {
-        // Get the current max bands value and ensure we respect it
-        let maxBandsValue = UserDefaults.standard.integer(forKey: CURRENT_NUMBER_OF_MAX_BANDS_STRING)
+        // Get the maximum bands value from settings
+        let maxBands = settingsManager.currentMaxBands
         
-        // Ensure slider max value is updated
-        bandsSlider.maximumValue = Float(maxBandsValue)
+        // Update the slider's maximum value to match settings
+        if sender.maximumValue != Float(maxBands) {
+            sender.maximumValue = Float(maxBands)
+        }
         
-        // Get selected value (clamped to max)
-        let currentNumberOfBands = min(Int(bandsSlider.value), maxBandsValue)
-        self.numberOfBands = checkBandsRange(numBands: currentNumberOfBands)
-        bandsTextField.text = "\(self.numberOfBands)"
-        print("number of bands = \(self.numberOfBands)")
+        // Get selected value from slider and clamp it
+        let selectedBands = Int(sender.value)
+        let validBands = min(selectedBands, maxBands)
         
-        // Update user defaults
-        UserDefaults.standard.set(self.numberOfBands, forKey: CURRENT_NUMBER_OF_BANDS_STRING)
-    }
-    
-    func checkBandsRange(numBands: Int) -> Int {
-        return numBands
+        // Ensure the slider value matches the valid bands
+        if Float(validBands) != sender.value {
+            sender.value = Float(validBands)
+        }
+        
+        // Update settings and UI
+        settingsManager.currentNumberOfBands = validBands
+        numberOfBands = validBands
+        bandsTextField.text = "\(validBands)"
+        
+        // Save the valid bands to user defaults
+        UserDefaults.standard.set(validBands, forKey: CURRENT_NUMBER_OF_BANDS_STRING)
+        
+        print("Number of bands = \(numberOfBands)")
     }
     
     @IBAction func focusButtonClicked(_ sender: UIButton) {
         if cameraManager.toggleFocusLock() {
-            if cameraManager.isFocusLocked {
-                if let image = UIImage(named: "focus_lock_icon_1920_closed") { //locked
-                    focusLockButton.setImage(image, for: .normal)
-                }
-            } else {
-                if let image = UIImage(named: "focus_lock_icon_1920_open") { //unlocked
-                    focusLockButton.setImage(image, for: .normal)
-                }
-            }
+            updateFocusLockUI()
         }
     }
     
     @IBAction func lockButtonClicked(_ sender: UIButton) {
         if cameraManager.toggleExposureLock() {
-            if cameraManager.isExposureLocked {
-                if let image = UIImage(named: "exposure_lock_icon_1920_closed") { //locked
-                    exposureLockButton.setImage(image, for: .normal)
-                }
-            } else {
-                if let image = UIImage(named: "exposure_lock_icon_1920_open") { //unlocked
-                    exposureLockButton.setImage(image, for: .normal)
-                }
-            }
+            updateExposureLockUI()
         }
     }
     
-    @objc func histogramVisibilityChanged() {
-        setVisibleHistogram()
+    // MARK: - UI Updates
+    
+    private func updateFocusLockUI() {
+        let imageName = cameraManager.isFocusLocked ? "focus_lock_icon_1920_closed" : "focus_lock_icon_1920_open"
+        if let image = UIImage(named: imageName) {
+            focusLockButton.setImage(image, for: .normal)
+        }
     }
     
-    @objc func maxBandsValueChanged() {
-        setupSliderForBands()
+    private func updateExposureLockUI() {
+        let imageName = cameraManager.isExposureLocked ? "exposure_lock_icon_1920_closed" : "exposure_lock_icon_1920_open"
+        if let image = UIImage(named: imageName) {
+            exposureLockButton.setImage(image, for: .normal)
+        }
     }
+    
+    // MARK: - Cleanup
     
     deinit {
+        updateChartTimer?.invalidate()
         NotificationCenter.default.removeObserver(self)
     }
-}
-
-// MARK: - Settings Management
-extension PGSViewController {
-    func userDefaultsExist(key: String) -> Bool {
-        return UserDefaults.standard.object(forKey: key) != nil
-    }
-
-    func setVisibleHistogram() {
-        //if it doesnt exist set a default value
-        if !userDefaultsExist(key: DEFAULT_HISTOGRAM_VISIBLE_STRING) {
-            UserDefaults.standard.set(true, forKey: DEFAULT_HISTOGRAM_VISIBLE_STRING)
-        }
-        
-        let defaults = UserDefaults.standard
-        let isHistogramVisible = defaults.bool(forKey: DEFAULT_HISTOGRAM_VISIBLE_STRING)
-        self.barChartView.isHidden = !isHistogramVisible
-    }
-    
-    func setupSliderForBands() {
-        //1. if it doesnt exist set a default value
-        if !userDefaultsExist(key: CURRENT_NUMBER_OF_MAX_BANDS_STRING) {
-            UserDefaults.standard.set(DEFAULT_MAX_BANDS_VALUE_INT, forKey: CURRENT_NUMBER_OF_MAX_BANDS_STRING)
-            let numOfCurrentBands = Int(DEFAULT_MAX_BANDS_VALUE_INT/2)
-            UserDefaults.standard.set(numOfCurrentBands, forKey: CURRENT_NUMBER_OF_BANDS_STRING)
-        }
-
-        //2. get the current user defaults for max bands and current bands
-        var numberOfMaxBands = UserDefaults.standard.integer(forKey: CURRENT_NUMBER_OF_MAX_BANDS_STRING)
-        var numberOfCurrentbands = UserDefaults.standard.integer(forKey: CURRENT_NUMBER_OF_BANDS_STRING)
-        
-        //3. make sure current num bands less than max number of bands
-        if numberOfMaxBands < DEFAULT_MAX_BANDS_VALUE_INT {
-            numberOfMaxBands = DEFAULT_MAX_BANDS_VALUE_INT
-            numberOfCurrentbands = Int(numberOfMaxBands/2)
-            
-            UserDefaults.standard.set(numberOfMaxBands, forKey: CURRENT_NUMBER_OF_MAX_BANDS_STRING)
-            UserDefaults.standard.set(numberOfCurrentbands, forKey: CURRENT_NUMBER_OF_BANDS_STRING)
-        }
-        else if numberOfCurrentbands > numberOfMaxBands {
-            numberOfCurrentbands = Int(numberOfMaxBands/2)
-            UserDefaults.standard.set(numberOfCurrentbands, forKey: CURRENT_NUMBER_OF_BANDS_STRING)
-        }
-
-        //4. setup all onscreen fields
-        self.bandsTextField.text = "\(numberOfCurrentbands)"
-        self.bandsSlider.value = Float(numberOfCurrentbands)
-        self.bandsSlider.maximumValue = Float(numberOfMaxBands)
-        
-        // Update the number of bands
-        self.numberOfBands = numberOfCurrentbands
-    }
-}
-
-
-
+} 

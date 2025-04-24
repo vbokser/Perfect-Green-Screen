@@ -1,0 +1,28 @@
+#!/bin/sh
+
+# This script copies DGCharts.bundle to the app bundle, working around sandbox issues
+
+echo "Starting DGCharts.bundle copy script..."
+
+# Locate DGCharts.bundle in the build directory
+find "${BUILT_PRODUCTS_DIR}" -name "DGCharts.bundle" -print | while read -r BUNDLE_PATH; do
+    echo "Found bundle at: ${BUNDLE_PATH}"
+    
+    # Create destination directory if it doesn't exist
+    DEST_DIR="${BUILT_PRODUCTS_DIR}/${FULL_PRODUCT_NAME}"
+    mkdir -p "${DEST_DIR}"
+    
+    # Copy the bundle
+    echo "Copying to: ${DEST_DIR}"
+    cp -Rf "${BUNDLE_PATH}" "${DEST_DIR}/"
+    
+    # Set proper permissions
+    chmod -R 755 "${DEST_DIR}/$(basename "${BUNDLE_PATH}")"
+done
+
+if [ $? -ne 0 ]; then
+    echo "Warning: Could not find DGCharts.bundle - chart styling may be missing"
+fi
+
+echo "DGCharts.bundle copy script completed"
+exit 0 
