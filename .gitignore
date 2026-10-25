@@ -35,9 +35,17 @@ xcuserdata/
 Pods/
 Podfile.lock
 
-# Carthage
-Carthage/
-Cartfile.resolved
-
 # Cache folders
 **/Caches/
+
+# Shared package resolution used by the Xcode app
+!*.xcodeproj/project.xcworkspace/
+*.xcodeproj/project.xcworkspace/*
+!*.xcodeproj/project.xcworkspace/xcshareddata/
+*.xcodeproj/project.xcworkspace/xcshareddata/*
+!*.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/
+*.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/*
+!*.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved
+
+# Python build-script checks
+__pycache__/

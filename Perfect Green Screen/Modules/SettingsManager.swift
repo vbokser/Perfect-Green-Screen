@@ -36,7 +36,7 @@ class SettingsManager {
         }
         set {
             let maxBands = currentMaxBands
-            let validValue = min(newValue, maxBands)
+            let validValue = min(max(newValue, DEFAULT_NUMBER_OF_MIN_BANDS_INT), maxBands)
             UserDefaults.standard.set(validValue, forKey: CURRENT_NUMBER_OF_BANDS_STRING)
         }
     }
@@ -63,12 +63,14 @@ class SettingsManager {
     // MARK: - Private Methods
     
     private func ensureDefaultsExist() {
-        if !keyExists(CURRENT_NUMBER_OF_MAX_BANDS_STRING) {
-            UserDefaults.standard.set(DEFAULT_MAX_BANDS_VALUE_INT, forKey: CURRENT_NUMBER_OF_MAX_BANDS_STRING)
-            
-            let defaultNumberOfBands = DEFAULT_MAX_BANDS_VALUE_INT / 2
-            UserDefaults.standard.set(defaultNumberOfBands, forKey: CURRENT_NUMBER_OF_BANDS_STRING)
-        }
+        let defaults = UserDefaults.standard
+        let storedMax = keyExists(CURRENT_NUMBER_OF_MAX_BANDS_STRING)
+            ? defaults.integer(forKey: CURRENT_NUMBER_OF_MAX_BANDS_STRING) : DEFAULT_MAX_BANDS_VALUE_INT
+        let maxBands = min(max(storedMax, DEFAULT_NUMBER_OF_MIN_BANDS_INT), DEFAULT_NUMBER_OF_MAX_BANDS_INT)
+        defaults.set(maxBands, forKey: CURRENT_NUMBER_OF_MAX_BANDS_STRING)
+        let storedBands = keyExists(CURRENT_NUMBER_OF_BANDS_STRING)
+            ? defaults.integer(forKey: CURRENT_NUMBER_OF_BANDS_STRING) : maxBands / 2
+        defaults.set(min(max(storedBands, DEFAULT_NUMBER_OF_MIN_BANDS_INT), maxBands), forKey: CURRENT_NUMBER_OF_BANDS_STRING)
     }
     
     private func keyExists(_ key: String) -> Bool {

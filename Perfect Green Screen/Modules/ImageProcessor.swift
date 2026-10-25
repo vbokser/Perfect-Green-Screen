@@ -12,7 +12,7 @@ class ImageProcessor {
         let width = CVPixelBufferGetWidth(pixelBuffer)
         let height = CVPixelBufferGetHeight(pixelBuffer)
         let bytesPerRow = CVPixelBufferGetBytesPerRow(pixelBuffer)
-        let bandSize = 256 / numberOfBands
+        let bandSize = 256 / min(max(numberOfBands, 2), 256)
         
         CVPixelBufferLockBaseAddress(pixelBuffer, .readOnly)
         defer { CVPixelBufferUnlockBaseAddress(pixelBuffer, .readOnly) }
@@ -76,8 +76,8 @@ class ImageProcessor {
         let baseAddress = CVPixelBufferGetBaseAddress(pixelBuffer)!
         let byteBuffer = baseAddress.assumingMemoryBound(to: UInt8.self)
         
-        // Update pixel count for percentage calculations
-        totalPixelCount = width * height
+        // Match the count to the sampled pixels used below.
+        totalPixelCount = 0
         
         // Reset histogram data
         for i in 0..<256 {
@@ -100,6 +100,7 @@ class ImageProcessor {
                 
                 if linearIntensity >= 0 && linearIntensity < 256 {
                     histogramData[linearIntensity] += 1
+                    totalPixelCount += 1
                 }
             }
         }

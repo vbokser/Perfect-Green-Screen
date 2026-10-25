@@ -1,221 +1,177 @@
 import UIKit
 import AVFoundation
 
-// Protocol for camera manager delegates to receive camera events
+// Use the view's backing layer so UIKit resizes the preview with the pane itself.
+final class CameraPreviewView: UIView {
+    override class var layerClass: AnyClass { AVCaptureVideoPreviewLayer.self }
+
+    var previewLayer: AVCaptureVideoPreviewLayer {
+        layer as! AVCaptureVideoPreviewLayer
+    }
+}
+
 protocol CameraManagerDelegate: AnyObject {
-    func cameraManager(_ manager: CameraManager, didReceiveFrame image: UIImage?)
     func cameraManager(_ manager: CameraManager, didUpdatePixelBuffer buffer: CVPixelBuffer)
 }
 
-class CameraManager: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate {
-    // Public properties
+final class CameraManager: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate {
+    enum CameraError: LocalizedError {
+        case permissionDenied
+        case unavailable
+        case configurationFailed
+
+        var errorDescription: String? {
+            switch self {
+            case .permissionDenied:
+                return "Allow camera access in Settings to analyze your green screen."
+            case .unavailable:
+                return "A rear camera is required. Run the app on an iPhone or iPad to see the live preview."
+            case .configurationFailed:
+                return "The camera could not be configured. Close other apps using the camera and try again."
+            }
+        }
+    }
+
     weak var delegate: CameraManagerDelegate?
-    var previewLayer: AVCaptureVideoPreviewLayer?
-    
-    // Camera state
-    private var captureSession: AVCaptureSession!
+    private(set) var previewLayer: AVCaptureVideoPreviewLayer?
+    private(set) var isFocusLocked = false
+    private(set) var isExposureLocked = false
+
+    private let captureSession = AVCaptureSession()
+    private let sessionQueue = DispatchQueue(label: "com.indiefilmgear.perfectgreenscreen.camera")
+    private let videoQueue = DispatchQueue(label: "com.indiefilmgear.perfectgreenscreen.frames")
     private var cameraDevice: AVCaptureDevice?
-    
-    // Camera settings
-    private(set) var isFocusLocked: Bool = false
-    private(set) var isExposureLocked: Bool = false
-    
-    // Available camera properties
-    var availableCameras: [AVCaptureDevice] {
-        let videoDeviceDiscovery = AVCaptureDevice.DiscoverySession(
-            deviceTypes: [.builtInWideAngleCamera, .builtInTelephotoCamera, .builtInUltraWideCamera, .builtInDualCamera, .builtInDualWideCamera],
-            mediaType: .video,
-            position: .unspecified
-        )
-        return videoDeviceDiscovery.devices
+    private var isConfigured = false
+    private var shouldRun = false
+
+    func createPreviewLayer(for view: CameraPreviewView) -> AVCaptureVideoPreviewLayer {
+        if let previewLayer = previewLayer { return previewLayer }
+        let layer = view.previewLayer
+        layer.session = captureSession
+        layer.videoGravity = .resizeAspect
+        previewLayer = layer
+        return layer
     }
-    
-    // MARK: - Initialization
-    
-    override init() {
-        super.init()
-        captureSession = AVCaptureSession()
-    }
-    
-    // MARK: - Camera Setup
-    
-    func setupCamera(with resolution: AVCaptureSession.Preset = .vga640x480, position: AVCaptureDevice.Position = .back) {
-        // Stop any existing session
-        if captureSession.isRunning {
-            stopCamera()
+
+    func updatePreviewOrientation() {
+        if let connection = previewLayer?.connection, connection.isVideoRotationAngleSupported(0) {
+            connection.videoRotationAngle = 0 // The app supports landscape right.
         }
-        
-        captureSession.sessionPreset = resolution
-        
-        // Select camera device
-        let videoDeviceDiscovery = AVCaptureDevice.DiscoverySession(
-            deviceTypes: [.builtInWideAngleCamera],
-            mediaType: .video,
-            position: position
-        )
-        
-        for camera in videoDeviceDiscovery.devices {
-            if camera.position == position {
-                cameraDevice = camera
-                break
+    }
+
+    func startCamera(completion: @escaping (Result<Void, CameraError>) -> Void) {
+        sessionQueue.async { [weak self] in
+            guard let self = self else { return }
+            self.shouldRun = true
+            switch AVCaptureDevice.authorizationStatus(for: .video) {
+            case .authorized:
+                self.configureAndStart(completion: completion)
+            case .notDetermined:
+                AVCaptureDevice.requestAccess(for: .video) { [weak self] granted in
+                    guard let self = self else { return }
+                    self.sessionQueue.async {
+                        guard self.shouldRun else { return }
+                        if granted {
+                            self.configureAndStart(completion: completion)
+                        } else {
+                            DispatchQueue.main.async { completion(.failure(.permissionDenied)) }
+                        }
+                    }
+                }
+            default:
+                DispatchQueue.main.async { completion(.failure(.permissionDenied)) }
             }
         }
-        
-        guard cameraDevice != nil else {
-            print("Error: Could not find camera")
-            return
-        }
-        
-        // Connect camera to session
+    }
+
+    private func configureAndStart(completion: @escaping (Result<Void, CameraError>) -> Void) {
         do {
-            let videoDeviceInput = try AVCaptureDeviceInput(device: cameraDevice!)
-            if captureSession.canAddInput(videoDeviceInput) {
-                captureSession.addInput(videoDeviceInput)
-            }
+            if !isConfigured { try configureSession() }
+            if shouldRun && !captureSession.isRunning { captureSession.startRunning() }
+            DispatchQueue.main.async { completion(.success(())) }
         } catch {
-            print("Error: Could not add camera as input: \(error)")
-            return
-        }
-        
-        // Configure video output
-        let videoOutput = AVCaptureVideoDataOutput()
-        videoOutput.videoSettings = [kCVPixelBufferPixelFormatTypeKey as String: Int(kCVPixelFormatType_32BGRA)]
-        videoOutput.alwaysDiscardsLateVideoFrames = true
-        
-        let videoOutputQueue = DispatchQueue(label: "VideoQueue")
-        videoOutput.setSampleBufferDelegate(self, queue: videoOutputQueue)
-        
-        if captureSession.canAddOutput(videoOutput) {
-            captureSession.addOutput(videoOutput)
-        } else {
-            print("Error: Could not add video data as output")
+            let cameraError = error as? CameraError ?? .configurationFailed
+            DispatchQueue.main.async { completion(.failure(cameraError)) }
         }
     }
-    
-    // MARK: - Preview Layer
-    
-    func createPreviewLayer(for view: UIView) -> AVCaptureVideoPreviewLayer {
-        let previewLayer = AVCaptureVideoPreviewLayer(session: captureSession)
-        previewLayer.videoGravity = .resizeAspect
-        previewLayer.frame = view.bounds
-        
-        if (previewLayer.connection?.isVideoOrientationSupported)! {
-            previewLayer.connection?.videoOrientation = .landscapeRight
+
+    private func configureSession() throws {
+        guard let device = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .back) else {
+            throw CameraError.unavailable
         }
-        
-        self.previewLayer = previewLayer
-        return previewLayer
-    }
-    
-    // MARK: - Camera Control
-    
-    func startCamera() {
-        if !captureSession.isRunning {
-            DispatchQueue.global(qos: .userInitiated).async { [weak self] in
-                self?.captureSession.startRunning()
-            }
+        let input = try AVCaptureDeviceInput(device: device)
+        let output = AVCaptureVideoDataOutput()
+        output.videoSettings = [kCVPixelBufferPixelFormatTypeKey as String: Int(kCVPixelFormatType_32BGRA)]
+        output.alwaysDiscardsLateVideoFrames = true
+        output.setSampleBufferDelegate(self, queue: videoQueue)
+
+        captureSession.beginConfiguration()
+        defer { captureSession.commitConfiguration() }
+        if captureSession.canSetSessionPreset(.vga640x480) { captureSession.sessionPreset = .vga640x480 }
+        guard captureSession.canAddInput(input) else { throw CameraError.configurationFailed }
+        captureSession.addInput(input)
+        guard captureSession.canAddOutput(output) else {
+            captureSession.removeInput(input)
+            throw CameraError.configurationFailed
         }
+        captureSession.addOutput(output)
+        if let connection = output.connection(with: .video), connection.isVideoRotationAngleSupported(0) {
+            connection.videoRotationAngle = 0
+        }
+        cameraDevice = device
+        isConfigured = true
     }
-    
+
     func stopCamera() {
-        if captureSession.isRunning {
-            captureSession.stopRunning()
+        sessionQueue.async { [weak self] in
+            guard let self = self else { return }
+            self.shouldRun = false
+            if self.captureSession.isRunning { self.captureSession.stopRunning() }
         }
     }
-    
-    func toggleFocusLock() -> Bool {
-        guard let device = cameraDevice else { return false }
-        
-        do {
-            try device.lockForConfiguration()
-            
-            isFocusLocked = !isFocusLocked
-            
-            if isFocusLocked {
-                device.focusMode = .locked
-            } else {
-                if device.isFocusModeSupported(.continuousAutoFocus) {
-                    device.focusMode = .continuousAutoFocus
+
+    func toggleFocusLock(completion: @escaping () -> Void) {
+        sessionQueue.async { [weak self] in
+            guard let self = self, let device = self.cameraDevice else { return }
+            let mode: AVCaptureDevice.FocusMode = device.focusMode == .locked ? .continuousAutoFocus : .locked
+            guard device.isFocusModeSupported(mode) else { return }
+            do {
+                try device.lockForConfiguration()
+                device.focusMode = mode
+                device.unlockForConfiguration()
+                let locked = mode == .locked
+                DispatchQueue.main.async {
+                    self.isFocusLocked = locked
+                    completion()
                 }
-            }
-            
-            device.unlockForConfiguration()
-            return true
-            
-        } catch {
-            print("Error: Could not lock camera for configuration: \(error)")
-            return false
-        }
-    }
-    
-    func toggleExposureLock() -> Bool {
-        guard let device = cameraDevice else { return false }
-        
-        do {
-            try device.lockForConfiguration()
-            
-            isExposureLocked = !isExposureLocked
-            
-            if isExposureLocked {
-                device.exposureMode = .locked
-            } else {
-                if device.isExposureModeSupported(.continuousAutoExposure) {
-                    device.exposureMode = .continuousAutoExposure
-                }
-            }
-            
-            device.unlockForConfiguration()
-            return true
-            
-        } catch {
-            print("Error: Could not lock camera for configuration: \(error)")
-            return false
-        }
-    }
-    
-    // MARK: - Camera Info
-    
-    func printCameraDetails() {
-        print("Available cameras:")
-        
-        for camera in availableCameras {
-            print("- \(camera.localizedName) (\(camera.position == .back ? "Back" : "Front"))")
-            print("  • Supports: Focus \(camera.isFocusModeSupported(.continuousAutoFocus) ? "✓" : "✗")")
-            print("  • Supports: Exposure \(camera.isExposureModeSupported(.continuousAutoExposure) ? "✓" : "✗")")
-            print("  • Supports: Flash \(camera.hasFlash ? "✓" : "✗")")
-            print("  • Supports: Torch \(camera.hasTorch ? "✓" : "✗")")
-            print("  • Min/Max Zoom: \(camera.minAvailableVideoZoomFactor)/\(camera.maxAvailableVideoZoomFactor)")
-            
-            if camera.formats.count > 0 {
-                print("  • Supported resolutions:")
-                for format in camera.formats {
-                    let dimensions = CMVideoFormatDescriptionGetDimensions(format.formatDescription)
-                    print("    - \(dimensions.width)×\(dimensions.height)")
-                }
+            } catch {
+                print("Could not change focus: \(error.localizedDescription)")
             }
         }
-        
-        print("\nSupported session presets:")
-        let presets: [AVCaptureSession.Preset] = [.photo, .high, .medium, .low, .vga640x480, .hd1280x720, .hd1920x1080, .hd4K3840x2160]
-        for preset in presets {
-            print("- \(preset.rawValue): \(captureSession.canSetSessionPreset(preset) ? "✓" : "✗")")
+    }
+
+    func toggleExposureLock(completion: @escaping () -> Void) {
+        sessionQueue.async { [weak self] in
+            guard let self = self, let device = self.cameraDevice else { return }
+            let mode: AVCaptureDevice.ExposureMode = device.exposureMode == .locked ? .continuousAutoExposure : .locked
+            guard device.isExposureModeSupported(mode) else { return }
+            do {
+                try device.lockForConfiguration()
+                device.exposureMode = mode
+                device.unlockForConfiguration()
+                let locked = mode == .locked
+                DispatchQueue.main.async {
+                    self.isExposureLocked = locked
+                    completion()
+                }
+            } catch {
+                print("Could not change exposure: \(error.localizedDescription)")
+            }
         }
     }
-    
-    // MARK: - AVCaptureVideoDataOutputSampleBufferDelegate
-    
+
     func captureOutput(_ output: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
-        guard let imageBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) else { return }
-        
-        // Notify delegate about the new frame
-        delegate?.cameraManager(self, didUpdatePixelBuffer: imageBuffer)
-        
-        // Create a simple UIImage from the buffer (unprocessed)
-        let ciImage = CIImage(cvPixelBuffer: imageBuffer)
-        let context = CIContext()
-        if let cgImage = context.createCGImage(ciImage, from: ciImage.extent) {
-            let image = UIImage(cgImage: cgImage)
-            delegate?.cameraManager(self, didReceiveFrame: image)
-        }
+        guard let buffer = CMSampleBufferGetImageBuffer(sampleBuffer) else { return }
+        delegate?.cameraManager(self, didUpdatePixelBuffer: buffer)
     }
-} 
+}

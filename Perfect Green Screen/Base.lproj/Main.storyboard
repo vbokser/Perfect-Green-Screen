@@ -21,19 +21,15 @@
                             <stackView opaque="NO" contentMode="scaleToFill" distribution="fillEqually" spacing="5" translatesAutoresizingMaskIntoConstraints="NO" id="FVM-nv-idW">
                                 <rect key="frame" x="0.0" y="110" width="812" height="265"/>
                                 <subviews>
-                                    <view contentMode="scaleAspectFit" translatesAutoresizingMaskIntoConstraints="NO" id="2P4-NW-Rte">
+                                    <view clipsSubviews="YES" contentMode="scaleAspectFit" translatesAutoresizingMaskIntoConstraints="NO" id="2P4-NW-Rte" customClass="CameraPreviewView" customModule="Perfect_Green_Screen" customModuleProvider="target">
                                         <rect key="frame" x="0.0" y="0.0" width="403.66666666666669" height="265"/>
                                         <color key="backgroundColor" red="1" green="0.50196081400000003" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
                                     </view>
-                                    <view contentMode="scaleAspectFit" translatesAutoresizingMaskIntoConstraints="NO" id="wZO-oY-CD5" customClass="UIImageView">
+                                    <view clipsSubviews="YES" contentMode="scaleAspectFit" translatesAutoresizingMaskIntoConstraints="NO" id="wZO-oY-CD5" customClass="UIImageView">
                                         <rect key="frame" x="408.66666666666674" y="0.0" width="403.33333333333326" height="265"/>
                                         <color key="backgroundColor" red="0.0" green="1" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
                                     </view>
                                 </subviews>
-                                <constraints>
-                                    <constraint firstItem="2P4-NW-Rte" firstAttribute="width" secondItem="wZO-oY-CD5" secondAttribute="width" id="XNt-EP-BvX"/>
-                                    <constraint firstItem="2P4-NW-Rte" firstAttribute="height" secondItem="wZO-oY-CD5" secondAttribute="height" id="ziY-JM-1qf"/>
-                                </constraints>
                             </stackView>
                             <stackView opaque="NO" contentMode="scaleToFill" spacing="15" translatesAutoresizingMaskIntoConstraints="NO" id="dbv-8b-iqN" userLabel="button stack view">
                                 <rect key="frame" x="272" y="60" width="390" height="40"/>
@@ -194,7 +190,7 @@
         <!--Settings View Controller-->
         <scene sceneID="Hc4-9Z-M7y">
             <objects>
-                <viewController id="fcJ-Yo-5HL" customClass="SettingsViewController" customModule="Perfect_Green_Screen" sceneMemberID="viewController">
+                <viewController id="fcJ-Yo-5HL" customClass="SettingsViewController" customModule="Perfect_Green_Screen" customModuleProvider="target" sceneMemberID="viewController">
                     <layoutGuides>
                         <viewControllerLayoutGuide type="top" id="4w8-hV-6LM"/>
                         <viewControllerLayoutGuide type="bottom" id="zR6-VG-dLz"/>
@@ -250,7 +246,7 @@
                                                 </segments>
                                                 <color key="tintColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                                 <connections>
-                                                    <action selector="enableHistogramSegmentedControl:" destination="fcJ-Yo-5HL" eventType="valueChanged" id="hPU-46-cAN"/>
+                                                    <action selector="histogramSegmentChanged:" destination="fcJ-Yo-5HL" eventType="valueChanged" id="2ZH-Zw-IMx"/>
                                                 </connections>
                                             </segmentedControl>
                                         </subviews>
@@ -316,7 +312,7 @@
                     <connections>
                         <outlet property="backButton" destination="cPB-2n-2fZ" id="iiy-YP-y6E"/>
                         <outlet property="emailButton" destination="oig-OY-1Dx" id="qp6-aI-XYq"/>
-                        <outlet property="enableHistogram" destination="SUu-fb-NoG" id="gLk-WE-XW3"/>
+                        <outlet property="histogramSegmentedControl" destination="SUu-fb-NoG" id="38K-Lh-kac"/>
                         <outlet property="maxBandsLabel" destination="V6A-wq-5mI" id="Ht8-f0-glE"/>
                         <outlet property="maxBandsSlider" destination="Zur-RY-1oa" id="JRn-0a-s9f"/>
                     </connections>

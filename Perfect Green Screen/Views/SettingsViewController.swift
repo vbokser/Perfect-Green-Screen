@@ -5,7 +5,6 @@ class SettingsViewController: UIViewController {
     
     // UI Outlets
     @IBOutlet weak var backButton: UIButton!
-    @IBOutlet weak var enableHistogram: UISegmentedControl!
     @IBOutlet weak var histogramSegmentedControl: UISegmentedControl!
     @IBOutlet weak var maxBandsLabel: UILabel!
     @IBOutlet weak var maxBandsSlider: UISlider!
@@ -15,16 +14,14 @@ class SettingsViewController: UIViewController {
     private let settingsManager = SettingsManager.shared
     
     // Constants
-    private let minBandsValue = 2
-    private let maxBandsValue = 40
+    private let minBandsValue = DEFAULT_NUMBER_OF_MIN_BANDS_INT
+    private let maxBandsValue = DEFAULT_NUMBER_OF_MAX_BANDS_INT
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        // Set rounded corners for email button
+        // Set rounded corners for buttons
         emailButton.layer.cornerRadius = 10.0
-        
-        // Set rounded corners for back button
         backButton.layer.cornerRadius = 10.0
         
         // Setup tap gesture for dismissing keyboard
@@ -44,10 +41,9 @@ class SettingsViewController: UIViewController {
     }
     
     private func updateUI() {
-        // Update histogram segmented control - handle both outlet names
+        // Update histogram segmented control
         let isVisible = settingsManager.isHistogramVisible
-        histogramSegmentedControl?.selectedSegmentIndex = isVisible ? 0 : 1
-        enableHistogram?.selectedSegmentIndex = isVisible ? 0 : 1
+        histogramSegmentedControl.selectedSegmentIndex = isVisible ? 0 : 1
         
         // Update max bands slider and label
         let maxBands = settingsManager.currentMaxBands
@@ -60,16 +56,19 @@ class SettingsViewController: UIViewController {
     // MARK: - Actions
     
     @IBAction func histogramSegmentChanged(_ sender: UISegmentedControl) {
-        // Update settings manager which will post a notification
+        // Update settings manager
         let isVisible = sender.selectedSegmentIndex == 0
         settingsManager.isHistogramVisible = isVisible
+        
+        // Post notification for other views
+        NotificationCenter.default.post(name: NSNotification.Name("HistogramVisibilityChanged"), object: nil)
     }
     
     @IBAction func maxBandsSliderChanged(_ sender: UISlider) {
         // Ensure value is within allowed range
         let maxBands = Int(max(min(sender.value, Float(maxBandsValue)), Float(minBandsValue)))
         
-        // Update settings manager which will post a notification
+        // Update settings manager
         settingsManager.currentMaxBands = maxBands
         
         // Update label
@@ -77,6 +76,9 @@ class SettingsViewController: UIViewController {
         
         // Ensure slider value matches the clamped value
         sender.value = Float(maxBands)
+        
+        // Post notification for other views
+        NotificationCenter.default.post(name: NSNotification.Name("MaxBandsValueChanged"), object: nil)
     }
     
     @IBAction func emailButtonClicked(_ sender: UIButton) {
@@ -85,12 +87,6 @@ class SettingsViewController: UIViewController {
     
     @IBAction func dismissVC(_ sender: Any) {
         dismiss(animated: true, completion: nil)
-    }
-    
-    @IBAction func enableHistogramChanged(_ sender: UISegmentedControl) {
-        // Update settings manager which will post a notification
-        let isVisible = sender.selectedSegmentIndex == 0
-        settingsManager.isHistogramVisible = isVisible
     }
     
     @objc func finishedEditing(_ sender: UITapGestureRecognizer) {

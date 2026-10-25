@@ -8,10 +8,11 @@ class PGSViewController: UIViewController, CameraManagerDelegate {
     @IBOutlet weak var barChartView: BarChartView!
     @IBOutlet weak var bandsSlider: UISlider!
     @IBOutlet weak var bandsTextField: UITextField!
-    @IBOutlet weak var cameraView: UIView!
+    @IBOutlet weak var cameraView: CameraPreviewView!
     @IBOutlet weak var processedView: UIImageView!
     @IBOutlet weak var exposureLockButton: UIButton!
     @IBOutlet weak var focusLockButton: UIButton!
+    @IBOutlet weak var enableHistogram: UISegmentedControl!
     
     // Module managers
     private let cameraManager = CameraManager()
@@ -22,7 +23,10 @@ class PGSViewController: UIViewController, CameraManagerDelegate {
     // State
     private var numberOfBands: Int = 10 // default value
     private var updateChartTimer: Timer?
-    private var doUpdateCharts: Bool = false
+    // Frames arrive on a background queue; publish only complete histogram snapshots.
+    private let frameLock = NSLock()
+    private var pendingHistogram: [Double]?
+    private var isCameraViewVisible = false
     
     // MARK: - View Lifecycle
     
@@ -41,11 +45,9 @@ class PGSViewController: UIViewController, CameraManagerDelegate {
         // Add notification observers
         setupNotificationObservers()
         
-        // Start chart update timer
-        setupTimers()
-        
-        // Print camera details for debugging
-        cameraManager.printCameraDetails()
+        _ = cameraManager.createPreviewLayer(for: cameraView)
+        NotificationCenter.default.addObserver(self, selector: #selector(resumeCamera), name: UIScene.didActivateNotification, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(pauseCamera), name: UIScene.didEnterBackgroundNotification, object: nil)
     }
     
     override func viewDidAppear(_ animated: Bool) {
@@ -55,22 +57,57 @@ class PGSViewController: UIViewController, CameraManagerDelegate {
         cameraView.backgroundColor = UIColor.clear
         processedView.backgroundColor = UIColor.clear
         
-        // Set up camera and preview layer
-        cameraManager.setupCamera(with: .vga640x480)
-        let previewLayer = cameraManager.createPreviewLayer(for: cameraView)
-        cameraView.layer.addSublayer(previewLayer)
-        
         // Configure UI based on settings
         updateHistogramVisibility()
         setupBandsSlider()
         
-        // Start the camera
-        cameraManager.startCamera()
+        isCameraViewVisible = true
+        setupTimers()
+        resumeCamera()
+    }
+
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        isCameraViewVisible = false
+        updateChartTimer?.invalidate()
+        updateChartTimer = nil
+        pauseCamera()
+    }
+
+    @objc private func resumeCamera() {
+        guard isCameraViewVisible else { return }
+        cameraManager.startCamera { [weak self] result in
+            guard let self = self, self.isCameraViewVisible else { return }
+            switch result {
+            case .success:
+                self.cameraManager.updatePreviewOrientation()
+            case .failure(let error):
+                guard self.presentedViewController == nil else { return }
+                let alert = UIAlertController(title: "Camera Unavailable", message: error.localizedDescription, preferredStyle: .alert)
+                if case .permissionDenied = error {
+                    alert.addAction(UIAlertAction(title: "Settings", style: .default) { _ in
+                        if let url = URL(string: UIApplication.openSettingsURLString) { UIApplication.shared.open(url) }
+                    })
+                }
+                alert.addAction(UIAlertAction(title: "OK", style: .cancel))
+                self.present(alert, animated: true)
+            }
+        }
+    }
+
+    @objc private func pauseCamera() {
+        cameraManager.stopCamera()
     }
     
     // MARK: - UI Setup
     
     private func setupUIElements() {
+        cameraView.clipsToBounds = true
+        processedView.clipsToBounds = true
+        processedView.contentMode = .scaleAspectFit
+        processedView.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        processedView.setContentCompressionResistancePriority(.defaultLow, for: .vertical)
+
         // Setup tap gesture for dismissing keyboard
         let tap = UITapGestureRecognizer(target: self, action: #selector(finishedEditing(_:)))
         tap.cancelsTouchesInView = false
@@ -96,49 +133,41 @@ class PGSViewController: UIViewController, CameraManagerDelegate {
     }
     
     private func setupTimers() {
-        // Create timer for chart updates
-        updateChartTimer = Timer.scheduledTimer(
-            timeInterval: 0.75,
-            target: self,
-            selector: #selector(updateChart),
-            userInfo: nil,
-            repeats: true
-        )
-    }
-    
-    // MARK: - CameraManagerDelegate
-    
-    func cameraManager(_ manager: CameraManager, didReceiveFrame image: UIImage?) {
-        // Not using the raw frame - we're using the processed one
-    }
-    
-    func cameraManager(_ manager: CameraManager, didUpdatePixelBuffer buffer: CVPixelBuffer) {
-        // Process the image with banding effect
-        if let processedImage = imageProcessor.processBanding(pixelBuffer: buffer, numberOfBands: self.numberOfBands) {
-            DispatchQueue.main.async { [weak self] in
-                self?.processedView.image = processedImage
-            }
+        updateChartTimer?.invalidate()
+        updateChartTimer = Timer.scheduledTimer(withTimeInterval: 0.75, repeats: true) { [weak self] _ in
+            self?.updateChart()
         }
-        
-        // Update histogram data
-        _ = imageProcessor.updateHistogram(from: buffer)
-        doUpdateCharts = true
     }
-    
+
+    // MARK: - CameraManagerDelegate
+
+    func cameraManager(_ manager: CameraManager, didUpdatePixelBuffer buffer: CVPixelBuffer) {
+        frameLock.lock()
+        let bands = numberOfBands
+        frameLock.unlock()
+
+        let processedImage = imageProcessor.processBanding(pixelBuffer: buffer, numberOfBands: bands)
+        _ = imageProcessor.updateHistogram(from: buffer)
+        let histogram = imageProcessor.getHistogramPercentages()
+        frameLock.lock()
+        pendingHistogram = histogram
+        frameLock.unlock()
+
+        DispatchQueue.main.async { [weak self] in
+            self?.processedView.image = processedImage
+        }
+    }
+
     // MARK: - Chart Updates
     
     @objc private func updateChart() {
-        if !doUpdateCharts {
-            return
-        }
-        
-        // Get histogram percentages and update chart
-        let percentages = imageProcessor.getHistogramPercentages()
-        chartManager.updateChart(with: percentages)
-        
-        doUpdateCharts = false
+        frameLock.lock()
+        let histogram = pendingHistogram
+        pendingHistogram = nil
+        frameLock.unlock()
+        if let histogram = histogram { chartManager.updateChart(with: histogram) }
     }
-    
+
     // MARK: - Settings Updates
     
     @objc private func histogramVisibilityChanged() {
@@ -165,7 +194,9 @@ class PGSViewController: UIViewController, CameraManagerDelegate {
         bandsTextField.text = "\(currentBands)"
         
         // Update the processing value
+        frameLock.lock()
         numberOfBands = currentBands
+        frameLock.unlock()
     }
     
     // MARK: - UI Actions
@@ -175,7 +206,10 @@ class PGSViewController: UIViewController, CameraManagerDelegate {
     }
     
     @IBAction func viewChangeClicked(_ sender: UISegmentedControl) {
-        cameraView.isHidden = sender.selectedSegmentIndex != 0
+        UIView.performWithoutAnimation {
+            cameraView.isHidden = sender.selectedSegmentIndex != 0
+            view.layoutIfNeeded()
+        }
     }
     
     @IBAction func bandsSliderChanged(_ sender: UISlider) {
@@ -189,7 +223,7 @@ class PGSViewController: UIViewController, CameraManagerDelegate {
         
         // Get selected value from slider and clamp it
         let selectedBands = Int(sender.value)
-        let validBands = min(selectedBands, maxBands)
+        let validBands = settingsManager.checkBandsRange(numBands: selectedBands)
         
         // Ensure the slider value matches the valid bands
         if Float(validBands) != sender.value {
@@ -198,7 +232,9 @@ class PGSViewController: UIViewController, CameraManagerDelegate {
         
         // Update settings and UI
         settingsManager.currentNumberOfBands = validBands
+        frameLock.lock()
         numberOfBands = validBands
+        frameLock.unlock()
         bandsTextField.text = "\(validBands)"
         
         // Save the valid bands to user defaults
@@ -208,15 +244,17 @@ class PGSViewController: UIViewController, CameraManagerDelegate {
     }
     
     @IBAction func focusButtonClicked(_ sender: UIButton) {
-        if cameraManager.toggleFocusLock() {
-            updateFocusLockUI()
-        }
+        cameraManager.toggleFocusLock { [weak self] in self?.updateFocusLockUI() }
     }
     
     @IBAction func lockButtonClicked(_ sender: UIButton) {
-        if cameraManager.toggleExposureLock() {
-            updateExposureLockUI()
-        }
+        cameraManager.toggleExposureLock { [weak self] in self?.updateExposureLockUI() }
+    }
+    
+    @IBAction func enableHistogramSegmentedControl(_ sender: UISegmentedControl) {
+        // Update settings manager which will post a notification
+        let isVisible = sender.selectedSegmentIndex == 0
+        settingsManager.isHistogramVisible = isVisible
     }
     
     // MARK: - UI Updates
@@ -240,5 +278,17 @@ class PGSViewController: UIViewController, CameraManagerDelegate {
     deinit {
         updateChartTimer?.invalidate()
         NotificationCenter.default.removeObserver(self)
+    }
+    
+    private func updateUI() {
+        // Update histogram segmented control
+        let isVisible = settingsManager.isHistogramVisible
+        enableHistogram?.selectedSegmentIndex = isVisible ? 0 : 1
+        
+        // Update max bands slider and label
+        let maxBands = settingsManager.currentMaxBands
+        bandsSlider.maximumValue = Float(maxBands)
+        bandsSlider.value = Float(maxBands)
+        bandsTextField.text = "\(maxBands)"
     }
 } 
